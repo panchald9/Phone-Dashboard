@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>📱 Phone Dashboard</title>
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+  
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+  <link href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css" rel="stylesheet" />
+</head>
+
+<body class="bg-gray-50 font-sans">
+
+  <!-- Navbar -->
+  <nav class="bg-indigo-700 shadow">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+      <h1 class="text-2xl font-bold text-white">📱 Phone Dashboard</h1>
+      <div class="flex gap-4 items-center">
+        <div id="actions-buttons" class="hidden space-x-2">
+          <button onclick="openUploadModal()" class="bg-white text-indigo-700 hover:bg-indigo-100 px-4 py-2 rounded-lg font-medium">Upload</button>
+          <button onclick="openPhoneModal()" class="bg-green-600 text-white hover:bg-green-700 px-4 py-2 rounded-lg font-medium">Add Phone</button>
+        </div>
+        <div id="user-section" class="hidden items-center gap-4">
+          <span id="user-name" class="text-white font-medium">Welcome, User</span>
+          <button onclick="logout()" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-medium">Logout</button>
+        </div>
+        <button id="login-button" onclick="redirectToLogin()" class="hidden bg-white text-indigo-700 hover:bg-indigo-100 px-4 py-2 rounded-lg font-medium">Login</button>
+      </div>
+    </div>
+  </nav>
+  
+  <!-- Main Content -->
+  <main class="max-w-7xl mx-auto p-6">
+    <section class="bg-white rounded-xl shadow p-6">
+      <table id="phone-table" class="display w-full"></table>
+    </section>
+  </main>
+  
+  <!-- Upload Modal -->
+<div id="upload-modal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden z-50">
+  <div class="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
+    <div class="flex justify-between items-center mb-4">
+      <h2 class="text-lg font-semibold text-indigo-700">Upload Phones</h2>
+      <button onclick="closeUploadModal()" class="text-gray-500 text-xl hover:text-gray-700">&times;</button>
+    </div>
+
+    <form id="upload-form" enctype="multipart/form-data">
+      <label for="dropzone-file" class="w-full h-48 flex flex-col items-center justify-center border-2 border-dashed border-indigo-300 bg-gray-100 rounded-lg cursor-pointer hover:bg-gray-200">
+        <div class="flex flex-col items-center pt-5 pb-6">
+          <svg class="w-10 h-10 text-indigo-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16v4a2 2 0 002 2h6a2 2 0 002-2v-4M7 12l5-5m0 0l5 5m-5-5v12"></path>
+          </svg>
+          <p class="text-sm font-medium text-gray-600">Click to upload or drag & drop</p>
+          <p class="text-xs text-gray-400">CSV, XLSX files only</p>
+        </div>
+        <input id="dropzone-file" type="file" name="excel_file" class="hidden" />
+      </label>
+
+      <!-- Submit button -->
+      <button type="submit" class="mt-4 w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 rounded-lg">
+        Submit
+      </button>
+    </form>
+  </div>
+</div>
+
+  
+  <!-- Add/Edit Phone Modal -->
+  <div id="phone-modal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden z-50">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-lg p-6">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-lg font-semibold text-green-700">Add / Edit Phone</h2>
+        <button onclick="closePhoneModal()" class="text-gray-500 text-xl hover:text-gray-700">&times;</button>
+      </div>
+      <form id="phone-form" class="space-y-4">
+        <input type="hidden" id="edit-id" />
+        <div class="grid grid-cols-2 gap-4">
+          <input type="text" id="brand" placeholder="Brand" name="brand" class="border px-3 py-2 rounded-lg" required />
+          <input type="text" id="model" placeholder="Model" name="model" class="border px-3 py-2 rounded-lg" required />
+          <input type="text" id="ram" placeholder="RAM" name="ram" class="border px-3 py-2 rounded-lg" required />
+          <input type="text" id="storage" placeholder="Storage" name="storage" class="border px-3 py-2 rounded-lg" required />
+          <input type="text" id="camera" placeholder="Camera" name="camera" class="border px-3 py-2 rounded-lg" required />
+          <input type="text" id="battery" placeholder="Battery" name="battery" class="border px-3 py-2 rounded-lg" required />
+          <input type="number" id="price" placeholder="Price" name="price" class="border px-3 py-2 rounded-lg col-span-2" required />
+        </div>
+        <input type="file" id="photo-file" name="image" accept="image/*" class="w-full" />
+        <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg font-semibold">Save</button>
+      </form>
+    </div>
+  </div>
+<script>
+const token = localStorage.getItem("token");
+const userName = localStorage.getItem("username");
+
+// Initialize DataTable
+const table = $('#phone-table').DataTable({
+  columns: [
+    {
+      title: "Image",
+      data: "image",
+      render: image => {
+        const path = `${image}`; 
+        const Path = `${image}`;
+        return `<img src="${path||Path}" alt="Phone" class="w-14 h-14 object-cover rounded-full mx-auto"
+           onmouseover="showPreview(this)"
+           onmouseout="hidePreview(this)">
+        <div class="image-preview hidden absolute z-50 top-0 left-16 bg-white border p-1 rounded shadow-lg">
+          <img src="${path||Path}" alt="Preview" class="w-52 h-52 object-contain">
+        </div>`;
+      }
+    },
+    { title: "Brand", data: "brand" },
+    { title: "Model", data: "model" },
+    { title: "RAM", data: "ram" },
+    { title: "Storage", data: "storage" },
+    { title: "Camera", data: "camera" },
+    { title: "Battery", data: "battery" },
+    {
+      title: "Price",
+      data: "price",
+      render: price => `$${price}`
+    },
+    {
+      title: "Actions",
+      data: null,
+      render: row => `
+        <button onclick='editPhone(${JSON.stringify(row)})' class='bg-yellow-400 hover:bg-yellow-500 text-white px-3 py-1 rounded mr-2'>Edit</button>
+        <button onclick='deletePhone(${row.id})' class='bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded'>Delete</button>
+      `
+    }
+  ]
+});
+
+// Setup Navbar
+function setupNavbar() {
+  if (token) {
+    $('#actions-buttons').removeClass('hidden');
+    $('#user-section').removeClass('hidden');
+    $('#login-button').addClass('hidden');
+    $('#user-name').text(`Welcome, ${userName || 'User'}`);
+  } else {
+    $('#actions-buttons').addClass('hidden');
+    $('#user-section').addClass('hidden');
+    $('#login-button').removeClass('hidden');
+  }
+}
+
+// Load phones
+function loadPhones() {
+  fetch(`http://127.0.0.1:5000/phones`, {
+    headers: { "Authorization": "Bearer " + token }
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.message) {
+      alert("Session expired. Please login again.");
+      localStorage.clear();
+      window.location.href = "login.html";
+    } else {
+      table.clear().rows.add(data.phones).draw();
+    }
+  })
+  .catch(err => console.error(err));
+}
+
+// Edit Phone
+function editPhone(phone) {
+  $('#edit-id').val(phone.id);
+  $('#brand').val(phone.brand);
+  $('#model').val(phone.model);
+  $('#ram').val(phone.ram);
+  $('#storage').val(phone.storage);
+  $('#camera').val(phone.camera);
+  $('#battery').val(phone.battery);
+  $('#price').val(phone.price);
+  $('#phone-modal').removeClass('hidden');
+}
+
+// Delete Phone
+function deletePhone(id) {
+  if (confirm("Are you sure you want to delete this phone?")) {
+    fetch(`http://127.0.0.1:5000/delete_phone/${id}`, {
+      method: "DELETE",
+      headers: { "Authorization": "Bearer " + token }
+    })
+    .then(res => res.json())
+    .then(data => {
+      alert(data.message);
+      loadPhones();
+    })
+    .catch(err => console.error(err));
+  }
+}
+
+// Save/Add Phone
+// $('#phone-form').submit(function (e) {
+//   e.preventDefault();
+//   const id = $('#edit-id').val();
+//   const phone = {
+//     brand: $('#brand').val(),
+//     model: $('#model').val(),
+//     ram: $('#ram').val(),
+//     storage: $('#storage').val(),
+//     camera: $('#camera').val(),
+//     battery: $('#battery').val(),
+//     price: $('#price').val(),
+//     image: $('#photo-file')[0].files[0]
+//   };
+//   console.log(phone);
+//   const method = id ? "PUT" : "POST";
+//   const url = id ? `http://127.0.0.1:5000/update_phone/${id}` : `http://127.0.0.1:5000/add_phone`;
+
+//   fetch(url, {
+//     method: method,
+//     headers: {
+//       "Content-Type": "application/json",
+//       "Authorization": "Bearer " + token
+//     },
+//     body: JSON.stringify(phone)
+//   })
+//   .then(res => res.json())
+//   .then(data => {
+//     alert(data.message);
+//     closePhoneModal();
+//     loadPhones();
+//   })
+//   .catch(err => console.error(err));
+// });
+
+$('#phone-form').submit(function (e) {
+  e.preventDefault();
+
+  const id = $('#edit-id').val();
+  const method = id ? "PUT" : "POST";
+  const url = id ? `http://127.0.0.1:5000/update_phone/${id}` : `http://127.0.0.1:5000/add_phone`;
+
+  const formData = new FormData();
+  formData.append('brand', $('#brand').val());
+  formData.append('model', $('#model').val());
+  formData.append('ram', $('#ram').val());
+  formData.append('storage', $('#storage').val());
+  formData.append('camera', $('#camera').val());
+  formData.append('battery', $('#battery').val());
+  formData.append('price', $('#price').val());
+
+  const imageFile = $('#photo-file')[0].files[0];
+  if (imageFile) {
+    formData.append('image', imageFile);
+  }
+
+  fetch(url, {
+    method: method,
+    headers: {
+      'Authorization': 'Bearer ' + token
+      // ❗️ DO NOT SET 'Content-Type' manually when using FormData
+    },
+    body: formData
+  })
+  .then(res => res.json())
+  .then(data => {
+    alert(data.message);
+    closePhoneModal();
+    loadPhones();
+  })
+  .catch(err => console.error(err));
+});
+
+
+// Open/Close Modals
+function openPhoneModal() {
+  $('#phone-form')[0].reset();
+  $('#edit-id').val('');
+  $('#phone-modal').removeClass('hidden');
+}
+function closePhoneModal() { $('#phone-modal').addClass('hidden'); }
+function openUploadModal() { $('#upload-modal').removeClass('hidden'); }
+function closeUploadModal() { $('#upload-modal').addClass('hidden'); }
+function logout() {
+  localStorage.clear();
+  window.location.href = "login.html";
+}
+function redirectToLogin() {
+  window.location.href = "login.html";
+}
+
+// Initialize
+$(document).ready(() => {
+  setupNavbar();
+  loadPhones();
+});
+
+function showPreview(img) {
+  const preview = img.parentElement.querySelector('.image-preview');
+  preview.classList.remove('hidden');
+}
+
+function hidePreview(img) {
+  const preview = img.parentElement.querySelector('.image-preview');
+  preview.classList.add('hidden');
+}    
+
+  function closeUploadModal() {
+    $('#upload-modal').addClass('hidden');
+  }
+
+  $(document).ready(function () {
+  $('#upload-form').on('submit', function (e) {
+    e.preventDefault();
+
+    const fileInput = $('#dropzone-file')[0];
+    if (fileInput.files.length === 0) {
+      alert("Please select a file first.");
+      return;
+    }
+
+    // Define the formData variable here
+    const formData = new FormData();
+    const token = localStorage.getItem("token");
+    formData.append('excel_file', fileInput.files[0]);
+
+    $.ajax({
+      url: 'http://127.0.0.1:5000/upload',
+      type: 'POST',
+      data: formData,
+      processData: false,
+      contentType: false,
+      headers: {
+        'Authorization': 'Bearer ' + token  // Adding token in the header
+      },
+      success: function (response) {
+        alert(response.message || "File uploaded successfully!");
+        $('#upload-modal').addClass('hidden');
+        $('#phone-table').DataTable().ajax.reload(); // Reload DataTable if using one
+      },
+      error: function (xhr) {
+        const errorMsg = xhr.responseJSON?.message || "Upload failed";
+        alert(errorMsg);
+        console.error("Upload error:", xhr.responseJSON || xhr);
+      }
+    });
+  });
+});
+
+</script>
+
+</body>
+</html>

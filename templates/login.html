@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login/Register</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-[#fdf8f7] flex items-center justify-center min-h-screen">
+  <div class="bg-white w-full max-w-4xl mx-auto flex rounded-lg shadow-lg overflow-hidden">
+    
+    <!-- Left Panel -->
+    <div class="bg-[#352f2e] text-white w-1/2 p-10 flex flex-col items-center text-center justify-center">
+      <div id="left-login" class="block">
+        <h2 class="text-2xl font-bold mb-2">Hello, Welcome!</h2>
+        <p class="mb-4">Don't have an account yet?</p>
+        <button onclick="toggleForm()" class="px-6 py-2 border border-[#ecb1a0] text-[#ecb1a0] rounded-full hover:bg-[#ecb1a0] hover:text-black transition">Register</button>
+      </div>
+      <div id="left-register" class="hidden">
+        <h2 class="text-2xl font-bold mb-2">Join Us!</h2>
+        <p class="mb-4">Already have an account?</p>
+        <button onclick="toggleForm()" class="px-6 py-2 border border-[#ecb1a0] text-[#ecb1a0] rounded-full hover:bg-[#ecb1a0] hover:text-black transition">Login</button>
+      </div>
+    </div>
+
+    <!-- Right Panel -->
+    <div class="w-1/2 p-10 bg-white">
+      
+      <!-- Login Form -->
+      <form id="login-form" class="block">
+        <h2 class="text-2xl font-semibold mb-6">Login</h2>
+        <div class="mb-4">
+          <label class="font-semibold text-sm">Email</label>
+          <input type="email" name="login-email" required placeholder="Enter your email" class="w-full mt-1 p-2 border rounded" />
+        </div>
+        <div class="mb-4">
+          <label class="font-semibold text-sm">Password</label>
+          <input type="password" name="login-password" required placeholder="Enter your password" class="w-full mt-1 p-2 border rounded" />
+        </div>
+        <button type="submit" class="w-full bg-[#ecb1a0] text-white py-2 rounded hover:bg-[#e9a089] transition">Login</button>
+        <p class="text-sm text-center text-gray-500 mt-4">
+          <a href="forgot_password.html" class="text-blue-600 hover:underline">Forgot your password?</a>
+        </p>
+      </form>
+
+      <!-- Register Form -->
+      <form id="register-form" class="hidden">
+        <h2 class="text-2xl font-semibold mb-6">Register</h2>
+        <div class="mb-4">
+          <label class="font-semibold text-sm">Full Name</label>
+          <input type="text" name="fname" required placeholder="Enter your full name" class="w-full mt-1 p-2 border rounded" />
+        </div>
+        <div class="mb-4">
+          <label class="font-semibold text-sm">Email</label>
+          <input type="email" name="email" required placeholder="Enter your email" class="w-full mt-1 p-2 border rounded" />
+        </div>
+        <div class="mb-4">
+          <label class="font-semibold text-sm">Password</label>
+          <input type="password" name="1pass" required placeholder="Create a password" class="w-full mt-1 p-2 border rounded" />
+        </div>
+        <div class="mb-4">
+          <label class="font-semibold text-sm">Confirm Password</label>
+          <input type="password" name="2pass" required placeholder="Confirm your password" class="w-full mt-1 p-2 border rounded" />
+        </div>
+        <button type="submit" class="w-full bg-[#ecb1a0] text-white py-2 rounded hover:bg-[#e9a089] transition">Register</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const url = "http://127.0.0.1:5000";
+
+    function toggleForm() {
+      document.getElementById("login-form").classList.toggle("hidden");
+      document.getElementById("register-form").classList.toggle("hidden");
+      document.getElementById("left-login").classList.toggle("hidden");
+      document.getElementById("left-register").classList.toggle("hidden");
+    }
+
+    // Login
+    const loginform = document.getElementById("login-form");
+    loginform.addEventListener("submit", function(event) {
+      event.preventDefault();
+      const email = document.getElementsByName("login-email")[0].value;
+      const password = document.getElementsByName("login-password")[0].value;
+
+      fetch(`${url}/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.message === "Login successful") {
+          localStorage.setItem("token", data.token);
+          localStorage.setItem("username", email.split("@")[0]);
+          window.location.href = "index.html";
+        } else {
+          alert("Login failed: " + data.message);
+        }
+      })
+      .catch(error => {
+        console.error("Login error:", error);
+        alert("An error occurred. Please try again.");
+      });
+    });
+
+    // Register
+    const registerform = document.getElementById("register-form");
+    registerform.addEventListener("submit", function(event) {
+      event.preventDefault();
+      const name = document.getElementsByName("fname")[0].value;
+      const email = document.getElementsByName("email")[0].value;
+      const p1 = document.getElementsByName("1pass")[0].value;
+      const p2 = document.getElementsByName("2pass")[0].value;
+
+      if (p1 !== p2) {
+        alert("Passwords do not match!");
+        return;
+      }
+
+      fetch(`${url}/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, password: p1 })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.message === "User registered successfully") {
+          alert("Registered successfully! You can now log in.");
+          toggleForm(); // Switch back to login form
+        } else {
+          alert("Registration failed: " + data.message);
+        }
+      })
+      .catch(error => {
+        console.error("Registration error:", error);
+        alert("An error occurred. Please try again.");
+      });
+    });
+  </script>
+</body>
+</html>
