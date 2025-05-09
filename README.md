@@ -78,15 +78,11 @@ Edit
 git clone https://github.com/yourusername/phone-dashboard.git
 cd phone-dashboard
 2. Create Virtual Environment (optional but recommended)
-bash
-Copy
-Edit
+
 python -m venv venv
 source venv/bin/activate  # On Windows use `venv\Scripts\activate`
 3. Install Dependencies
-bash
-Copy
-Edit
+
 pip install -r requirements.txt
 4. Configure Database
 Make sure MySQL is installed and running.
@@ -95,9 +91,6 @@ Create a database named phones_db.
 
 Use the following SQL to create the table:
 
-sql
-Copy
-Edit
 CREATE TABLE phones (
     id INT AUTO_INCREMENT PRIMARY KEY,
     brand VARCHAR(50),
@@ -111,25 +104,17 @@ CREATE TABLE phones (
 );
 Update your database credentials in app.py:
 
-python
-Copy
-Edit
 app.config['MYSQL_USER'] = 'yourusername'
 app.config['MYSQL_PASSWORD'] = 'yourpassword'
 app.config['MYSQL_DB'] = 'phones_db'
 5. Run the Flask App
-bash
-Copy
-Edit
+
 python app.py
 Visit http://127.0.0.1:5000 in your browser.
 
 📦 Sample Excel Format
 A sample phone_data.xlsx is included with the following columns:
 
-mathematica
-Copy
-Edit
 ID | Brand | Model | RAM | Storage | Camera | Battery | Price | Image (URL or filename)
 Use it for importing initial data or testing.
 
@@ -149,5 +134,5 @@ Open a pull request
 📩 Contact
 Created with ❤️ by Dhruv Panchal – Founder of PanchalCodeLab
 
-📧 Email: dhruvpanchal@example.com
-🌐 GitHub: @yourusername
+📧 Email: dp148026@gmail.com
+🌐 GitHub: @panchald9
