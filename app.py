@@ -24,8 +24,8 @@ mysql=MySQL(app)
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USERNAME'] = 'panchalcodelabe@gmail.com'  # Your email here
-app.config['MAIL_PASSWORD'] = 'hzyb xvja npel mdae'  # Your email password here
+app.config['MAIL_USERNAME'] = ''  # Your email here
+app.config['MAIL_PASSWORD'] = ''  # Your email password here
 mail = Mail(app)
 
 CORS(app)
